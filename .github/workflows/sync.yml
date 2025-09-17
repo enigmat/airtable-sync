@@ -22,5 +22,5 @@ jobs:
 
       - name: Run Airtable Sync
         env:
-          COMPOSIO_API_KEY: ${{ secrets.COMPOSIO_API_KEY }}
+          COMPOSIO_API_KEY: ${{ ak_QbLmJvJm11SzpdLbFGx_ }}
         run: python airtable_sync.py
