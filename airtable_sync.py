@@ -7,8 +7,12 @@ headers = {"Authorization": f"Bearer {API_KEY}"}
 
 BASE_ID = "appeeELOgYbxo6gya"
 DESTINATION_TABLE = "Smart AI Prompt"
-FIELD_TO_SYNC = "Prompt"
-TARGET_FIELD = "Prompt Title"
+
+FIELD_MAP = {
+    "Prompt Name": "Prompt Title",
+    "Prompt": "Prompt",
+    "Categories": "Prompt Category"
+}
 
 source_tables = [
     "Recraft", "AI Prompt Heaven", "Artistly", "Creative AI Prompt Library",
@@ -25,7 +29,7 @@ def sync_table(table_name):
         "baseId": BASE_ID,
         "tableIdOrName": table_name,
         "filterByFormula": "NOT({Synced})",
-        "fields": [FIELD_TO_SYNC]
+        "fields": list(FIELD_MAP.keys())
     }, headers=headers)
 
     if not response.ok:
@@ -34,7 +38,16 @@ def sync_table(table_name):
     if not records:
         return f"✅ {table_name}: No new records"
 
-    to_create = [{"fields": {TARGET_FIELD: r['fields'].get(FIELD_TO_SYNC, "")}} for r in records if FIELD_TO_SYNC in r['fields']]
+    to_create = []
+    for r in records:
+        source_fields = r.get('fields', {})
+        mapped_fields = {
+            dest: source_fields.get(src, "")
+            for src, dest in FIELD_MAP.items()
+            if src in source_fields
+        }
+        if mapped_fields:
+            to_create.append({"fields": mapped_fields})
     record_ids = [r['id'] for r in records]
 
     create_resp = requests.post(create_url, json={
